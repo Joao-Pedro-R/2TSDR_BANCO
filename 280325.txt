@@ -41,7 +41,7 @@ CREATE OR REPLACE PROCEDURE prc_insere_produto (
     NOM_PRODUTO VARCHAR2
 ) IS
 BEGIN
-    IF LENGTH(nom_produto) > 3 AND NOT REGEXP_LIKE(nom_produto, '[0-9]') THEN
+    IF LENGTH(nom_produto) > 3 AND NOT REGEXP_LIKE(nom_produto, '[0-9]') THEN --esse regex confere se NÃO tem números.
         INSERT INTO PRODUTO (COD_PRODUTO, NOM_PRODUTO)
         VALUES (COD_PRODUTO, NOM_PRODUTO);
         COMMIT;

@@ -17,7 +17,7 @@ CREATE OR REPLACE PROCEDURE calc_fgts IS
     valor NUMBER;
 BEGIN
     valor := cal_fgts(15000);
-    dbms_output.put_line('O valor do calculo È: ' || valor);
+    dbms_output.put_line('O valor do calculo √©: ' || valor);
 END;
 
 EXEC calc_fgts();
@@ -37,7 +37,7 @@ BEGIN
     RETURN v_sal;
 EXCEPTION
     WHEN meu_erro THEN
-        raise_application_error(-20001, 'Seu c·lculo de fgts est· abaixo de R$1000');
+        raise_application_error(-20001, 'Seu c√°lculo de fgts est√° abaixo de R$1000');
 END;
 
 SELECT cal_fgts_exc(100) from dual;
@@ -55,10 +55,54 @@ BEGIN
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('Produto inserido com sucesso: ' || nom_produto);
     ELSE
-        DBMS_OUTPUT.PUT_LINE('Erro: O nome do produto deve ter mais de 3 caracteres e n„o pode conter n˙mero.');
+        DBMS_OUTPUT.PUT_LINE('Erro: O nome do produto deve ter mais de 3 caracteres e n√£o pode conter n√∫mero.');
     END IF;
 END prc_insere_produto;
 
 EXEC prc_insere_produto(6969, 'SOLJ');
 
 SELECT * FROM PRODUTO WHERE COD_PRODUTO = 6969;
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE OR REPLACE PROCEDURE prc_insere_cliente (
+    p_cod_cliente NUMBER,
+    p_nom_cliente VARCHAR2
+) IS
+BEGIN
+    IF LENGTH(p_nom_cliente) > 3 AND NOT REGEXP_LIKE(p_nom_cliente, '[0-9]') THEN
+        INSERT INTO CLIENTE (COD_CLIENTE, NOM_CLIENTE)
+        VALUES (p_cod_cliente, p_nom_cliente);
+        
+        COMMIT;
+        DBMS_OUTPUT.PUT_LINE('Cliente inserido com sucesso: ' || p_nom_cliente);
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Erro: O nome do cliente deve ter mais de 3 caracteres e n√£o pode conter n√∫meros.');
+    END IF;
+END prc_insere_cliente;
+
+EXEC prc_insere_cliente(6969, 'ROGER');
+
+SELECT * FROM CLIENTE WHERE COD_CLIENTE = 6969;
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION fun_valida_nome (
+    nome VARCHAR2
+) RETURN VARCHAR2 IS
+    meu_erro EXCEPTION;
+BEGIN
+    IF LENGTH(nome) > 3 AND NOT REGEXP_LIKE(nome, '[0-9]') THEN
+        RETURN('NOME V√ÅLIDO!');
+    ELSE
+        RAISE meu_erro;
+    END IF;
+EXCEPTION
+    WHEN meu_erro THEN
+        raise_application_error(-20001, 'NOME INV√ÅLIDO');
+END;
+
+SELECT fun_valida_nome('rog') from dual;
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+

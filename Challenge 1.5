@@ -1,0 +1,73 @@
+--1
+
+BEGIN
+    FOR rec IN (
+        SELECT
+            U.nomeusuario,
+            P.nomepatio,
+            COUNT(M.idmoto) AS total_motos,
+            SUM(C.valortotalcontrato) AS total_valor
+        FROM
+            mt_usuario U
+            JOIN mt_contrato C ON U.idusuario = C.mt_usuario_idusuario
+            JOIN mt_moto M ON C.id_contrato = M.mt_contrato_id_contrato
+            JOIN mt_patio P ON M.mt_patio_idpatio = P.idpatio
+        GROUP BY
+            U.nomeusuario, P.nomepatio
+        ORDER BY
+            total_valor DESC
+    ) LOOP
+        DBMS_OUTPUT.PUT_LINE('Usu�rio: ' || rec.nomeusuario ||
+                             ' | P�tio: ' || rec.nomepatio ||
+                             ' | Total Motos: ' || rec.total_motos ||
+                             ' | Valor Total Contrato: R$' || rec.total_valor);
+    END LOOP;
+END;
+/
+
+--2
+
+BEGIN
+    FOR rec IN (
+        SELECT
+            u.nomeusuario,
+            p.nomepermissao,
+            COUNT(c.id_contrato) AS contratos_usuario,
+            SUM(c.valortotalcontrato) AS soma_valores
+        FROM
+            mt_usuario u
+            JOIN mt_usuario_permissao up ON u.idusuario = up.mt_usuario_idusuario
+            JOIN mt_permissao p ON up.mt_permissao_idpermissao = p.idpermissao
+            JOIN mt_contrato c ON u.idusuario = c.mt_usuario_idusuario
+        GROUP BY
+            u.nomeusuario, p.nomepermissao
+        ORDER BY
+            soma_valores DESC
+    ) LOOP
+        DBMS_OUTPUT.PUT_LINE('Usu�rio: ' || rec.nomeusuario ||
+                             ' | Permiss�o: ' || rec.nomepermissao ||
+                             ' | Contratos: ' || rec.contratos_usuario ||
+                             ' | Valor Total: R$' || rec.soma_valores);
+    END LOOP;
+END;
+/
+
+--3
+
+BEGIN
+    FOR rec IN (
+        SELECT
+            NVL(LAG(nomeusuario) OVER (ORDER BY idusuario), 'Vazio') AS nome_anterior,
+            nomeusuario AS nome_atual,
+            NVL(LEAD(nomeusuario) OVER (ORDER BY idusuario), 'Vazio') AS nome_proximo
+        FROM
+            mt_usuario
+        WHERE
+            ROWNUM <= 5  -- Garante no m�nimo 5 registros no resultado (ajust�vel)
+    ) LOOP
+        DBMS_OUTPUT.PUT_LINE('Anterior: ' || rec.nome_anterior ||
+                             ' | Atual: ' || rec.nome_atual ||
+                             ' | Pr�ximo: ' || rec.nome_proximo);
+    END LOOP;
+END;
+/

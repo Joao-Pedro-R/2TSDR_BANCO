@@ -1,32 +1,36 @@
 --1
 
-BEGIN
-    FOR rec IN (
-        SELECT
-            U.nomeusuario,
-            P.nomepatio,
-            COUNT(M.idmoto) AS total_motos,
-            SUM(C.valortotalcontrato) AS total_valor
-        FROM
-            mt_usuario U
-            JOIN mt_contrato C ON U.idusuario = C.mt_usuario_idusuario
-            JOIN mt_moto M ON C.id_contrato = M.mt_contrato_id_contrato
-            JOIN mt_patio P ON M.mt_patio_idpatio = P.idpatio
-        GROUP BY
-            U.nomeusuario, P.nomepatio
-        ORDER BY
-            total_valor DESC
-    ) LOOP
-        DBMS_OUTPUT.PUT_LINE('Usu�rio: ' || rec.nomeusuario ||
-                             ' | P�tio: ' || rec.nomepatio ||
-                             ' | Total Motos: ' || rec.total_motos ||
-                             ' | Valor Total Contrato: R$' || rec.total_valor);
-    END LOOP;
-END;
-/
+CREATE OR REPLACE PROCEDURE ListarPatios(x INTEGER) is
+    BEGIN
+        FOR rec IN (
+            SELECT
+                P.nomepatio,
+                E.logradouro,
+                COUNT(M.idmoto) AS total_motos,
+                SUM(C.valortotalcontrato) AS total_valor
+            FROM
+                mt_patio P
+                JOIN mt_moto M ON C.id_contrato = M.mt_contrato_id_contrato
+                JOIN mt_contrato C ON M.MT_CONTRATO_ID_CONTRATO = C.ID_CONTRATO
+                JOIN mt_endereco E ON E.MT_PATIO_IDPATIO = p.idpatio
+            GROUP BY
+                P.nomepatio, E.logradouro
+            WHERE
+                P.IDPATIO = x
+            ORDER BY
+                total_valor DESC
+        ) LOOP
+            DBMS_OUTPUT.PUT_LINE('~ Patio: ' || rec.nomepatio ||
+                                 ' / Endereco: ' || rec.logradouro ||
+                                 ' / Total Motos: ' || rec.total_motos ||
+                                 ' / Valor Total Contrato: R$' || rec.total_valor || ' ~');
+        END LOOP;
+    END;
+    /
 
 --2
 
+CREATE OR REPLACE PROCEDURE MostrarUsuario(X INTEGER) IS
 BEGIN
     FOR rec IN (
         SELECT
@@ -41,33 +45,39 @@ BEGIN
             JOIN mt_contrato c ON u.idusuario = c.mt_usuario_idusuario
         GROUP BY
             u.nomeusuario, p.nomepermissao
+        WHERE
+            u.idusuario = X
         ORDER BY
             soma_valores DESC
     ) LOOP
-        DBMS_OUTPUT.PUT_LINE('Usu�rio: ' || rec.nomeusuario ||
-                             ' | Permiss�o: ' || rec.nomepermissao ||
-                             ' | Contratos: ' || rec.contratos_usuario ||
-                             ' | Valor Total: R$' || rec.soma_valores);
+        DBMS_OUTPUT.PUT_LINE('~ Usuario: ' || rec.nomeusuario ||
+                             ' / Permissao: ' || rec.nomepermissao ||
+                             ' / Contratos: ' || rec.contratos_usuario ||
+                             ' / Valor Total: R$' || rec.soma_valores || ' ~');
     END LOOP;
 END;
 /
 
 --3
-
+CREATE OR REPLACE PROCEDURE MostrarUsuario IS
 BEGIN
     FOR rec IN (
         SELECT
-            NVL(LAG(nomeusuario) OVER (ORDER BY idusuario), 'Vazio') AS nome_anterior,
-            nomeusuario AS nome_atual,
-            NVL(LEAD(nomeusuario) OVER (ORDER BY idusuario), 'Vazio') AS nome_proximo
+            U.nomeusuario AS nome_atual,
+            M.modm.modelomoto AS moto_atual,
+            NVL(LAG(m.modelomoto) OVER (ORDER BY c.id_contrato), 'Vazio') AS moto_anterior,
+            NVL(LEAD(m.modelomoto) OVER (ORDER BY c.id_contrato), 'Vazio') AS moto_proximo
         FROM
-            mt_usuario
+            mt_usuario U
+            JOIN MT_CONTRATO C ON u.idusuario = c.mt_usuario_idusuario
+            JOIN mt_moto M ON C.id_contrato = M.mt_contrato_id_contrato
         WHERE
-            ROWNUM <= 5  -- Garante no m�nimo 5 registros no resultado (ajust�vel)
+            ROWNUM <= 5  -- Garante no minimo 5 registros no resultado (ajustavel)
     ) LOOP
-        DBMS_OUTPUT.PUT_LINE('Anterior: ' || rec.nome_anterior ||
-                             ' | Atual: ' || rec.nome_atual ||
-                             ' | Pr�ximo: ' || rec.nome_proximo);
+        DBMS_OUTPUT.PUT_LINE('Nome: ' || rec.nome_atual ||
+                             ' | Modelo moto: ' || rec.moto_atual ||
+                             ' | Modelo anterior: ' || rec.moto_anterior ||
+                             ' | Modelo posterior: ' || rec.moto_proximo);
     END LOOP;
 END;
 /
